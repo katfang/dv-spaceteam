@@ -85,7 +85,7 @@
     var rootRef = new Firebase("https://google-spaceteam.firebaseio.com");
     var roomRef = rootRef.child(roomKey);
     var usersRef = roomRef.child("users");
-    var lostUsersRef = roomRef.child("lose-screen/users");
+    var lostUsersRef = roomRef.child("lose-screen").child("users");
     var numInRoom = null;
     var numLost = null;
 
@@ -116,7 +116,7 @@
           checkAllLost();
         }
       };
-      var checkForStart = function() {
+      var checkAllLost = function() {
         if (numInRoom !== null && numLost !== null && numInRoom === numLost) {
           usersRef.off('value', usersCallback);
           lostUsersRef.off('value', lostUsersCallback);
@@ -124,11 +124,13 @@
         }
       };
       usersRef.on('value', usersCallback);
-      lostUsersRef.on('value', lostUsersRef);
+      lostUsersRef.on('value', lostUsersCallback);
     };
     
-    checkLose()
+    checkLose();
     // waitForAllToLose();
+    res.header('Access-Control-Allow-Origin', 'http://localhost:8000');
+    res.send();
   });
 
   app.post('/roomgen', function(req, res) {
