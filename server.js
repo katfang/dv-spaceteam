@@ -56,8 +56,10 @@
 	// api ---------------------------------------------------------------------
 	// get all todos
 	app.get('/api/todos', function(req, res) {
+    res.json({"something":"fake?"});
 
 		// use mongoose to get all todos in the database
+    /*
 		Todo.find(function(err, todos) {
 
 			// if there is an error retrieving, send the error. nothing after res.send(err) will execute
@@ -65,7 +67,7 @@
 				res.send(err)
 
 			res.json(todos); // return all todos in JSON format
-		});
+		});*/
 	});
 
   /*
