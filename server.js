@@ -136,6 +136,7 @@
   app.post('/roomgen', function(req, res) {
     var roomKey = req.body.key;
     var roomLevel = req.body.level;
+    console.log("Generating room for", roomKey, roomLevel);
     var rootRef = new Firebase("https://google-spaceteam.firebaseio.com");
     var roomRef = rootRef.child(roomKey);
     var gadgetsRef = rootRef.child("-gadgets");
