@@ -30,6 +30,7 @@
 	var bodyParser = require('body-parser'); 	// pull information from HTML POST (express4)
 	var methodOverride = require('method-override'); // simulate DELETE and PUT (express4)
 	var argv = require('optimist').argv;
+  var Firebase = require('firebase');
 
 	// configuration =================
 
@@ -50,6 +51,7 @@
 		completed: Boolean
 	});
   */
+  var GADGETS_PER_USER = 5;
 
 	// routes ======================================================================
 
@@ -69,9 +71,117 @@
 			res.json(todos); // return all todos in JSON format
 		});*/
 	});
+  
+  app.options("*", function(req, res) {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:8000');
+    res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.send();
+  });
 
   app.post('/roomgen', function(req, res) {
-    res.send(req.random);
+    var roomKey = req.body.key;
+    var roomLevel = req.body.level;
+    var rootRef = new Firebase("https://google-spaceteam.firebaseio.com");
+    var roomRef = rootRef.child(roomKey);
+    var gadgetsRef = rootRef.child("-gadgets");
+    var usersRef = roomRef.child("users");
+    var levelRef = roomRef.child("level").child(roomLevel);
+
+    // set room state w/ transaction
+    var generateRoom = function() {
+      levelRef.child("state").transaction(function(currentData) {
+        if (currentData === null) {
+          return "generating";
+        } else {
+          return undefined;
+        }
+      }, function(error, committed, snapshot) {
+        if (committed === true) {
+          getUsersThenGadgets();
+        }
+      });
+    };
+
+    // grab users
+    var getUsersThenGadgets = function() {
+      var usersCallback = function(snap) {
+        if (snap !== null) {
+          var users = snap.val();
+          usersRef.off('value', usersCallback);
+          getGadgets(function(gadgets) {
+            genLevelGadgets(users, gadgets);
+          });
+        }
+      };
+      usersRef.on('value', usersCallback);
+    };
+
+    // once have users -> get gadgets
+    var getGadgets = function(callback) {
+      var gadgetsCallback = function(snap) {
+        if (snap != null) {
+          var gadgets = snap.val();
+          gadgetsRef.off('value', gadgetsCallback);
+          callback(gadgets);
+        }
+      };
+      gadgetsRef.on('value', gadgetsCallback);
+    };
+
+    // generate gadgets for each user
+    var genLevelGadgets = function(users, gadgets) {
+      var levelGadgets = {};
+      var numUsers = Object.keys(users).length; 
+      var gadgetKeys = Object.keys(gadgets);
+      var maxNumGadgets = gadgetKeys.length;
+      var gadgetsPerUser = Math.min(GADGETS_PER_USER, Math.floor(maxNumGadgets / numUsers));
+      for (var i = 0; i < gadgetsPerUser; i++) {
+        for (var u in users) {
+          var randNum = Math.floor(Math.random() * gadgetKeys.length);
+          var gadgetKey = gadgetKeys[randNum];
+          gadgetKeys.splice(gadgetKey,1);
+          var gadget = gadgets[gadgetKey];
+          gadget.user = u;
+          levelGadgets[gadgetKey] = gadget;
+        }
+      }
+      levelRef.child("gadgets").set(levelGadgets, function(error) {
+        if (error !== null) { 
+          console.log("Error setting gadgets", roomKey, roomLevel, error);
+        } else {
+          initTasks();
+        }
+      });
+    };
+
+    // TODO gen instructions (maybe)
+    
+    // initialize task count 
+    var initTasks = function() {
+      levelRef.child("tasks").set({"completed":0, "failed":0}, function(error) {
+        if (error !== null) {
+          console.log("Error setting tasks", roomKey, roomLevel, error);
+        } else {
+          finalizeLevel();
+        }
+      });
+    };
+
+    // set state to ready
+    var finalizeLevel = function() {
+      levelRef.child("state").set("ready");
+    }
+    
+    generateRoom();
+    // the following calls represent the flow, but they are all called inside one another 
+    // getUsersThenGadgets()
+    // getGadgets()
+    // genLevelGadgets()
+    // initTasks()
+    // finalizeLevel()
+    res.header('Access-Control-Allow-Origin', 'http://localhost:8000');
+    res.send(req.body.random);
   });
 
   /*
