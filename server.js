@@ -78,6 +78,59 @@
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     res.send();
   });
+  
+  app.post('/lose-screen', function(req, res) {
+    var roomKey = req.body.key;
+    // set lose-screen state w/ transaction
+    var rootRef = new Firebase("https://google-spaceteam.firebaseio.com");
+    var roomRef = rootRef.child(roomKey);
+    var usersRef = roomRef.child("users");
+    var lostUsersRef = roomRef.child("lose-screen/users");
+    var numInRoom = null;
+    var numLost = null;
+
+    var checkLose = function() {
+      roomRef.child("lose-screen").child("state").transaction(function(currentData) {
+        if (currentData === null) {
+          return "losing";
+        } else {
+          return undefined;
+        }
+      }, function(error, committed, snapshot) {
+        if (committed === true) {
+          waitForAllToLose();
+        }
+      });
+    };
+
+    var waitForAllToLose = function() {
+      var usersCallback = function(snap) {
+        if (snap.val() !== null) {
+          numInRoom = snap.numChildren();
+          checkAllLost();
+        }
+      };
+      var lostUsersCallback = function(snap) {
+        if (snap.val() !== null) {
+          numLost = snap.numChildren();
+          checkAllLost();
+        }
+      };
+      var checkForStart = function() {
+        if (numInRoom !== null && numLost !== null && numInRoom === numLost) {
+          usersRef.off('value', usersCallback);
+          lostUsersRef.off('value', lostUsersCallback);
+          roomRef.set(null); // blow the room up
+        }
+      };
+      usersRef.on('value', usersCallback);
+      lostUsersRef.on('value', lostUsersRef);
+    };
+    
+    checkForUsers();
+    // checkLose()
+    // waitForAllToLose();
+  });
 
   app.post('/roomgen', function(req, res) {
     var roomKey = req.body.key;
@@ -88,7 +141,7 @@
     var usersRef = roomRef.child("users");
     var levelRef = roomRef.child("level").child(roomLevel);
 
-    // set room state w/ transaction
+    // set level state w/ transaction
     var generateRoom = function() {
       levelRef.child("state").transaction(function(currentData) {
         if (currentData === null) {
