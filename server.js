@@ -73,7 +73,7 @@
 	});
   
   app.options("*", function(req, res) {
-    res.header('Access-Control-Allow-Origin', 'http://localhost:8000');
+    res.header('Access-Control-Allow-Origin', 'https://google-spaceteam.firebaseapp.com');
     res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     res.send();
@@ -129,7 +129,7 @@
     
     checkLose();
     // waitForAllToLose();
-    res.header('Access-Control-Allow-Origin', 'http://localhost:8000');
+    res.header('Access-Control-Allow-Origin', 'https://google-spaceteam.firebaseapp.com');
     res.send();
   });
 
@@ -235,7 +235,7 @@
     // genLevelGadgets()
     // initTasks()
     // finalizeLevel()
-    res.header('Access-Control-Allow-Origin', 'http://localhost:8000');
+    res.header('Access-Control-Allow-Origin', 'https://google-spaceteam.firebaseapp.com');
     res.send(req.body.random);
   });
 
