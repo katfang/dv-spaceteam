@@ -127,8 +127,7 @@
       lostUsersRef.on('value', lostUsersRef);
     };
     
-    checkForUsers();
-    // checkLose()
+    checkLose()
     // waitForAllToLose();
   });
 
