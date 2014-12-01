@@ -33,7 +33,7 @@
 
 	// configuration =================
 
-	mongoose.connect('mongodb://' + argv.be_ip + ':80/my_database');
+	// mongoose.connect('mongodb://' + argv.be_ip + ':80/my_database');
 
     	app.use('/js', express.static(__dirname + '/js'));
    	 app.use('/bower_components', express.static(__dirname + '/bower_components'));
@@ -44,10 +44,12 @@
 	app.use(methodOverride());
 
 	// define model =================
+  /*
 	var Todo = mongoose.model('Todo', {
 		title : String,
 		completed: Boolean
 	});
+  */
 
 	// routes ======================================================================
 
@@ -66,6 +68,7 @@
 		});
 	});
 
+  /*
 	// create todo and send back all todos after creation
 	app.post('/api/todos', function(req, res) {
 
@@ -116,6 +119,7 @@
 			});
 		});
 	});
+  */
 
 	// application -------------------------------------------------------------
 	app.get('/', function(req, res) {
